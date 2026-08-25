@@ -39,3 +39,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# secrets and credentials
+*.key
+*.secret
+secrets/
+credentials/
+*.credentials
+
+# local IDE files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# local OS files
+.Trashes

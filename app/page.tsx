@@ -1,69 +1,180 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { problems } from "@/data/problems";
+import ProblemCard from "@/components/problem-bank/ProblemCard";
+
+const filters = ["All", "Easy", "Medium", "Hard"] as const;
+
+type Filter = (typeof filters)[number];
 
 export default function Home() {
+  const [activeFilter, setActiveFilter] = useState<Filter>("All");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredProblems = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    return problems.filter((problem) => {
+      const matchesDifficulty =
+        activeFilter === "All" || problem.difficulty === activeFilter;
+
+      const matchesSearch =
+        query.length === 0 ||
+        problem.title.toLowerCase().includes(query) ||
+        problem.description.toLowerCase().includes(query) ||
+        problem.topics.some((topic) =>
+          topic.toLowerCase().includes(query),
+        );
+
+      return matchesDifficulty && matchesSearch;
+    });
+  }, [activeFilter, searchQuery]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <main className="min-h-screen">
+      <header className="border-b border-[var(--border)] bg-[var(--surface)]">
+        <div className="container flex h-16 items-center justify-between">
+          <Link
+            href="/"
+            className="text-[15px] font-semibold tracking-[-0.02em]"
+          >
+            ERROR DNA
+          </Link>
+
+          <nav className="flex items-center gap-6 text-sm">
+            <Link
+              href="/"
+              className="font-medium text-[var(--text-primary)]"
+            >
+              Problems
+            </Link>
+
+            <Link
+              href="#progress"
+              className="text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+            >
+              Your Progress
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      <section className="container pb-20 pt-16 sm:pt-20">
+        <div className="max-w-3xl">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
+            AI-powered coding practice
+          </p>
+
+          <h1 className="max-w-2xl text-4xl font-semibold tracking-[-0.045em] text-[var(--text-primary)] sm:text-5xl sm:leading-[1.08]">
+            Wrong Answer isn&apos;t the problem.
+            <br />
+            <span className="text-[var(--text-secondary)]">
+              Your pattern is.
+            </span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p className="mt-6 max-w-xl text-base leading-7 text-[var(--text-secondary)]">
+            Practice coding. Discover your recurring mistakes.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="mt-12 border-y border-[var(--border)] py-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative w-full max-w-md">
+              <label htmlFor="problem-search" className="sr-only">
+                Search problems
+              </label>
+
+              <input
+                id="problem-search"
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search problems..."
+                className="input"
+              />
+            </div>
+
+            <div
+              className="flex flex-wrap items-center gap-1"
+              aria-label="Difficulty filters"
+            >
+              {filters.map((filter) => {
+                const isActive = activeFilter === filter;
+
+                return (
+                  <button
+                    key={filter}
+                    type="button"
+                    onClick={() => setActiveFilter(filter)}
+                    aria-pressed={isActive}
+                    className={
+                      isActive
+                        ? "rounded-md bg-[var(--brand)] px-3 py-2 text-sm font-medium text-white"
+                        : "rounded-md px-3 py-2 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-subtle)] hover:text-[var(--text-primary)]"
+                    }
+                  >
+                    {filter}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+
+        <section className="mt-10" aria-labelledby="problems-heading">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-sm text-[var(--text-muted)]">
+                Practice library
+              </p>
+
+              <h2
+                id="problems-heading"
+                className="mt-1 text-xl font-semibold tracking-[-0.025em]"
+              >
+                Problems
+              </h2>
+            </div>
+
+            <span className="text-sm text-[var(--text-muted)]">
+              {filteredProblems.length}{" "}
+              {filteredProblems.length === 1 ? "problem" : "problems"}
+            </span>
+          </div>
+
+          {filteredProblems.length > 0 ? (
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              {filteredProblems.map((problem) => (
+                <ProblemCard key={problem.id} problem={problem} />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-5 border border-dashed border-[var(--border-strong)] bg-[var(--surface)] px-6 py-12 text-center">
+              <p className="text-sm font-semibold text-[var(--text-primary)]">
+                No problems found
+              </p>
+
+              <p className="mt-2 text-sm text-[var(--text-secondary)]">
+                Try a different search term or difficulty.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setActiveFilter("All");
+                }}
+                className="btn btn-secondary mt-5"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
+        </section>
+      </section>
+    </main>
   );
 }
