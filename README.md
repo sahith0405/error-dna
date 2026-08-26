@@ -61,6 +61,28 @@ flowchart TD
     History --> Dashboard[Progress dashboard<br/>patterns + learning trends]
 ```
 
+Fallback view:
+
+```text
+Student
+      ↓
+Next.js UI / Problem + C++ Editor
+      ↓
+/api/execute
+      ↓
+C++17 Compilation + Execution
+      ↓
+Test Case Evaluation → Execution Results
+      ↓
+/api/analyze → Deterministic Analysis Layer
+      ↓
+Error DNA Diagnosis
+      ↓
+Fingerprint + Explanation + Signals + Confidence + Recommendation
+      ↓
+localStorage Submission History → Dashboard
+```
+
 ## Example Workflow
 
 ```text
