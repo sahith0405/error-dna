@@ -49,40 +49,21 @@ This design provides an explainable analysis foundation for the current demo. A 
 
 ```mermaid
 flowchart TD
-    Student --> UI[Next.js UI<br/>Problem + C++ Editor]
-    UI --> Execute[/api/execute]
-    Execute --> Compile[C++17 compilation<br/>with g++]
-    Compile --> Run[Execution per test case]
-    Run --> Evaluate[Test case evaluation]
-    Evaluate --> Results[Execution results]
-    Results --> Analyze[/api/analyze]
-    Analyze --> Rules[Deterministic analysis layer]
-    Rules --> Diagnosis[Error DNA diagnosis]
-    Diagnosis --> Feedback[Fingerprint + explanation<br/>+ signals + confidence + recommendation]
-    Feedback --> History[localStorage submission history]
-    History --> Dashboard[Progress dashboard<br/>patterns + learning trends]
-```
-
-Fallback view:
-
-```text
-Student
-      ↓
-Next.js UI / Problem + C++ Editor
-      ↓
-/api/execute
-      ↓
-C++17 Compilation + Execution
-      ↓
-Test Case Evaluation → Execution Results
-      ↓
-/api/analyze → Deterministic Analysis Layer
-      ↓
-Error DNA Diagnosis
-      ↓
-Fingerprint + Explanation + Signals + Confidence + Recommendation
-      ↓
-localStorage Submission History → Dashboard
+    A["Student"] --> B["Next.js Web App"]
+    B --> C["Problem and C++ Editor"]
+    C --> D["Code Execution API"]
+    D --> E["C++ Compilation and Execution"]
+    E --> F["Test Case Evaluation"]
+    F --> G["Execution Results"]
+    G --> H["AI Analysis API"]
+    H --> I["AI Analysis Layer"]
+    I --> J["Error DNA Diagnosis"]
+    J --> K["Error Fingerprint"]
+    J --> L["Explanation"]
+    J --> M["Signals and Confidence"]
+    J --> N["Recommendation"]
+    J --> O["Submission History"]
+    O --> P["Learning Dashboard"]
 ```
 
 ## Example Workflow
