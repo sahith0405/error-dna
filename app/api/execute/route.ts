@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { execFile } from "child_process";
-import { promisify } from "util";
-import { mkdtemp, writeFile, rm } from "fs/promises";
-import { tmpdir } from "os";
-import path from "path";
 
-const execFileAsync = promisify(execFile);
+const PISTON_EXECUTE_URL =
+  "https://emkc.org/api/v2/piston/execute";
+const PISTON_CPP_VERSION = "10.2.0";
+const WANDBOX_COMPILE_URL =
+  "https://wandbox.org/api/compile.json";
+const EXECUTION_TIMEOUT_MS = 10_000;
 
 type ExecuteRequest = {
   code: string;
@@ -20,44 +20,124 @@ function normalizeOutput(output: string) {
   return output.trim().replace(/\s+/g, " ");
 }
 
-function runExecutable(
-  executablePath: string,
-  input: string,
+type PistonStage = {
+  stdout?: string;
+  stderr?: string;
+  output?: string;
+  code?: number | null;
+  signal?: string | null;
+};
+
+type PistonResponse = {
+  compile?: PistonStage;
+  run?: PistonStage;
+};
+
+async function fetchWithTimeout(
+  url: string,
+  body: Record<string, unknown>,
 ) {
-  return new Promise<{
-    stdout: string;
-    stderr: string;
-  }>((resolve, reject) => {
-    const child = execFile(
-      executablePath,
-      [],
-      {
-        timeout: 3000,
-        maxBuffer: 1024 * 1024,
+  const controller = new AbortController();
+  const timeout = setTimeout(
+    () => controller.abort(),
+    EXECUTION_TIMEOUT_MS,
+  );
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-      (error, stdout, stderr) => {
-        if (error) {
-          Object.assign(error, {
-            stdout: stdout ?? "",
-            stderr: stderr ?? "",
-          });
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
 
-          reject(error);
-          return;
-        }
+    const payload = await response.json();
 
-        resolve({
-          stdout: stdout ?? "",
-          stderr: stderr ?? "",
-        });
-      },
-    );
-
-    if (child.stdin) {
-      child.stdin.write(input);
-      child.stdin.end();
+    if (!response.ok) {
+      throw new Error(
+        typeof payload === "object" && payload !== null
+          ? JSON.stringify(payload)
+          : `Hosted compiler returned HTTP ${response.status}.`,
+      );
     }
-  });
+
+    return payload;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function executeWithPiston(
+  code: string,
+  input: string,
+) : Promise<PistonResponse> {
+  return (await fetchWithTimeout(PISTON_EXECUTE_URL, {
+    language: "cpp",
+    version: PISTON_CPP_VERSION,
+    files: [
+      {
+        name: "main.cpp",
+        content: code,
+      },
+    ],
+    stdin: input,
+  })) as PistonResponse;
+}
+
+async function executeWithWandbox(
+  code: string,
+  input: string,
+): Promise<PistonResponse> {
+  const result = (await fetchWithTimeout(WANDBOX_COMPILE_URL, {
+    compiler: "gcc-head",
+    options: "-std=c++17",
+    code,
+    stdin: input,
+  })) as {
+    status?: string;
+    signal?: string;
+    compiler_error?: string;
+    compiler_output?: string;
+    program_output?: string;
+    program_error?: string;
+    program_message?: string;
+  };
+
+  const compileFailed = Boolean(result.compiler_error);
+  const exitCode = Number.parseInt(result.status ?? "0", 10);
+
+  return {
+    compile: {
+      code: compileFailed ? 1 : 0,
+      stderr: result.compiler_error,
+      output: result.compiler_output,
+    },
+    run: {
+      code: Number.isNaN(exitCode) ? 1 : exitCode,
+      signal: result.signal,
+      stdout: result.program_output,
+      stderr: result.program_error || result.program_message,
+    },
+  };
+}
+
+async function executeWithHostedCompiler(
+  code: string,
+  input: string,
+): Promise<PistonResponse> {
+  try {
+    return await executeWithPiston(code, input);
+  } catch (pistonError) {
+    try {
+      return await executeWithWandbox(code, input);
+    } catch (wandboxError) {
+      throw new Error(
+        `Piston: ${pistonError instanceof Error ? pistonError.message : "request failed"}; Wandbox: ${wandboxError instanceof Error ? wandboxError.message : "request failed"}`,
+      );
+    }
+  }
 }
 
 export async function POST(request: Request) {
@@ -112,68 +192,50 @@ export async function POST(request: Request) {
     );
   }
 
-  const workDirectory = await mkdtemp(
-    path.join(tmpdir(), "error-dna-"),
-  );
-
-  const sourcePath = path.join(
-    workDirectory,
-    "solution.cpp",
-  );
-
-  const executablePath = path.join(
-    workDirectory,
-    "solution",
-  );
-
   try {
-    await writeFile(sourcePath, body.code, "utf8");
-
-    try {
-      await execFileAsync(
-        "/usr/bin/g++",
-        [
-          "-std=c++17",
-          "-O2",
-          "-Wall",
-          "-Wextra",
-          sourcePath,
-          "-o",
-          executablePath,
-        ],
-        {
-          timeout: 10_000,
-          maxBuffer: 1024 * 1024,
-        },
-      );
-    } catch (error: unknown) {
-      const compileError =
-        typeof error === "object" &&
-        error !== null &&
-        "stderr" in error &&
-        typeof error.stderr === "string"
-          ? error.stderr
-          : "Compilation failed.";
-
-      return NextResponse.json({
-        success: false,
-        status: "COMPILATION_ERROR",
-        message: "Your code could not be compiled.",
-        compileError,
-      });
-    }
-
     const results = [];
 
     for (const testCase of body.testCases) {
       try {
-        const execution = await runExecutable(
-          executablePath,
+        const pistonResult = await executeWithHostedCompiler(
+          body.code,
           testCase.input,
         );
 
+        const compilation = pistonResult.compile;
+        if (compilation?.code !== undefined && compilation.code !== 0) {
+          return NextResponse.json({
+            success: false,
+            status: "COMPILATION_ERROR",
+            message: "Your code could not be compiled.",
+            compileError:
+              compilation.stderr ||
+              compilation.output ||
+              "Compilation failed.",
+          });
+        }
+
+        const execution = pistonResult.run;
+        if (!execution) {
+          throw new Error("Piston did not return an execution result.");
+        }
+
+        if (execution.signal || (execution.code !== undefined && execution.code !== 0)) {
+          return NextResponse.json({
+            success: false,
+            status: "RUNTIME_ERROR",
+            message: "Your program terminated unexpectedly.",
+            testCaseId: testCase.id,
+            runtimeError:
+              execution.stderr ||
+              execution.output ||
+              execution.signal ||
+              "Program terminated with an error.",
+          });
+        }
+
         const actualOutput = normalizeOutput(
-          execution.stdout,
+          execution.stdout ?? execution.output ?? "",
         );
 
         const expectedOutput = normalizeOutput(
@@ -187,28 +249,10 @@ export async function POST(request: Request) {
           actualOutput,
         });
       } catch (error: unknown) {
-        const executionError =
-          typeof error === "object" &&
-          error !== null &&
-          "stderr" in error &&
-          typeof error.stderr === "string"
-            ? error.stderr
-            : "Program execution failed.";
-
-        const errorCode =
-          typeof error === "object" &&
-          error !== null &&
-          "code" in error
-            ? error.code
-            : undefined;
-
-        const errorKilled =
-          typeof error === "object" &&
-          error !== null &&
-          "killed" in error &&
-          error.killed === true;
-
-        if (errorKilled || errorCode === "ETIMEDOUT") {
+        if (
+          error instanceof DOMException &&
+          error.name === "AbortError"
+        ) {
           return NextResponse.json({
             success: false,
             status: "TIME_LIMIT_EXCEEDED",
@@ -217,13 +261,17 @@ export async function POST(request: Request) {
           });
         }
 
+        const runtimeError =
+          error instanceof Error
+            ? error.message
+            : "Program execution failed.";
+
         return NextResponse.json({
           success: false,
           status: "RUNTIME_ERROR",
           message: "Your program terminated unexpectedly.",
           testCaseId: testCase.id,
-          runtimeError:
-            executionError || "Program terminated with an error.",
+          runtimeError,
         });
       }
     }
@@ -246,10 +294,15 @@ export async function POST(request: Request) {
       failedTests: results.length - passedCount,
       results,
     });
-  } finally {
-    await rm(workDirectory, {
-      recursive: true,
-      force: true,
+  } catch (error: unknown) {
+    return NextResponse.json({
+      success: false,
+      status: "RUNTIME_ERROR",
+      message: "The execution service could not be reached.",
+      runtimeError:
+        error instanceof Error
+          ? error.message
+          : "Program execution failed.",
     });
   }
 }
