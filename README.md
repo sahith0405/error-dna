@@ -2,7 +2,7 @@
 
 > Don't just fix the code. Understand the mistake.
 
-**Live demo:** [error-dna.vercel.app](https://error-dna.vercel.app/)
+**Live demo:** [error-dna-15-eu0r49bie-sahith6.vercel.app](https://error-dna-15-eu0r49bie-sahith6.vercel.app/)
 
 ERROR DNA is a coding practice platform for students who need more than a binary judge result. A normal `Wrong Answer` tells a student that the output is incorrect, but not what reasoning pattern may have caused the mistake. ERROR DNA runs C++ submissions against multiple test cases, examines the execution evidence, and turns the result into an understandable diagnosis that students can use to improve.
 
@@ -51,7 +51,7 @@ The following solutions are the intended correct C++17 solutions for the 8 probl
 
 ### How to verify
 
-1. Open the corresponding problem on the [deployed application](https://error-dna.vercel.app/).
+1. Open the corresponding problem on the [deployed application](https://error-dna-15-eu0r49bie-sahith6.vercel.app/).
 2. Copy the complete solution into the editor.
 3. Run or submit it.
 4. The expected result is `ACCEPTED`.
