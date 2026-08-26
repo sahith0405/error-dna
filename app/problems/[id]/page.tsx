@@ -7,6 +7,15 @@ import { useState } from "react";
 import { problems } from "@/data/problems";
 import CodeEditor from "@/components/coding-workspace/CodeEditor";
 
+type Diagnosis = {
+  category: string;
+  title: string;
+  confidence: number;
+  explanation: string;
+  signals: string[];
+  recommendation: string;
+};
+
 type JudgeResult = {
   success: boolean;
   status: string;
@@ -42,6 +51,9 @@ export default function ProblemPage() {
 
   const [judgeResult, setJudgeResult] =
     useState<JudgeResult | null>(null);
+
+  const [diagnosis, setDiagnosis] =
+    useState<Diagnosis | null>(null);
 
   if (!problem) {
     return (
@@ -84,6 +96,7 @@ export default function ProblemPage() {
 
     setStatus("running");
     setJudgeResult(null);
+    setDiagnosis(null);
 
     try {
       const response = await fetch("/api/execute", {
@@ -100,6 +113,32 @@ export default function ProblemPage() {
       const result: JudgeResult = await response.json();
 
       setJudgeResult(result);
+
+      try {
+        const analysisResponse = await fetch("/api/analyze", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            code,
+            status: result.status,
+            compileError: result.compileError,
+            runtimeError: result.runtimeError,
+            results: result.results,
+          }),
+        });
+
+        if (analysisResponse.ok) {
+          const analysis = await analysisResponse.json();
+
+          if (analysis.success && analysis.diagnosis) {
+            setDiagnosis(analysis.diagnosis);
+          }
+        }
+      } catch {
+        setDiagnosis(null);
+      }
 
       if (result.status === "ACCEPTED") {
         setStatus("submitted");
@@ -339,6 +378,63 @@ export default function ProblemPage() {
                     </p>
                   )}
                 </div>
+
+                {diagnosis && (
+                  <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)]">
+                          Error DNA
+                        </p>
+
+                        <h3 className="mt-2 text-base font-semibold">
+                          {diagnosis.title}
+                        </h3>
+                      </div>
+
+                      <span className="shrink-0 rounded-full bg-[var(--surface-subtle)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">
+                        {Math.round(diagnosis.confidence * 100)}%
+                      </span>
+                    </div>
+
+                    <div className="mt-3">
+                      <span className="rounded-md bg-[var(--warning-bg)] px-2.5 py-1 text-xs font-semibold text-[var(--warning)]">
+                        {diagnosis.category}
+                      </span>
+                    </div>
+
+                    <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
+                      {diagnosis.explanation}
+                    </p>
+
+                    <div className="mt-5">
+                      <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                        Signals
+                      </p>
+
+                      <ul className="mt-2 space-y-1.5">
+                        {diagnosis.signals.map((signal, index) => (
+                          <li
+                            key={`${signal}-${index}`}
+                            className="text-sm text-[var(--text-secondary)]"
+                          >
+                            • {signal}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="mt-5 border-t border-[var(--border)] pt-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                        Recommendation
+                      </p>
+
+                      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                        {diagnosis.recommendation}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {judgeResult.compileError && (
                   <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
