@@ -170,7 +170,8 @@ return false;
 }
 
 int main() {
-string s = "()[]{}";
+string s;
+getline(cin, s);
 
 cout << (isValid(s) ? "true" : "false");
 
@@ -273,8 +274,17 @@ return -1;
 }
 
 int main() {
-vector<int> nums = {-1, 0, 3, 5, 9, 12};
-int target = 9;
+int n;
+cin >> n;
+
+vector<int> nums(n);
+
+for (int i = 0; i < n; i++) {
+cin >> nums[i];
+}
+
+int target;
+cin >> target;
 
 cout << search(nums, target);
 
@@ -296,27 +306,27 @@ examples: [
 testCases: [
   {
     id: "binary-search-1",
-    input: "-1 0 3 5 9 12 | 9",
+    input: "6\n-1 0 3 5 9 12\n9",
     expectedOutput: "4",
   },
   {
     id: "binary-search-2",
-    input: "-1 0 3 5 9 12 | 2",
+    input: "6\n-1 0 3 5 9 12\n2",
     expectedOutput: "-1",
   },
   {
     id: "binary-search-3",
-    input: "5 | 5",
+    input: "1\n5\n5",
     expectedOutput: "0",
   },
   {
     id: "binary-search-4",
-    input: "1 3 5 7 9 | 1",
+    input: "5\n1 3 5 7 9\n1",
     expectedOutput: "0",
   },
   {
     id: "binary-search-5",
-    input: "1 3 5 7 9 | 9",
+    input: "5\n1 3 5 7 9\n9",
     expectedOutput: "4",
   },
 ],
@@ -377,7 +387,14 @@ return 0;
 }
 
 int main() {
-vector<int> prices = {7, 1, 5, 3, 6, 4};
+int n;
+cin >> n;
+
+vector<int> prices(n);
+
+for (int i = 0; i < n; i++) {
+cin >> prices[i];
+}
 
 cout << maxProfit(prices);
 
@@ -399,27 +416,27 @@ examples: [
 testCases: [
   {
     id: "stock-1",
-    input: "7 1 5 3 6 4",
+    input: "6\n7 1 5 3 6 4",
     expectedOutput: "5",
   },
   {
     id: "stock-2",
-    input: "7 6 4 3 1",
+    input: "5\n7 6 4 3 1",
     expectedOutput: "0",
   },
   {
     id: "stock-3",
-    input: "1 2",
+    input: "2\n1 2",
     expectedOutput: "1",
   },
   {
     id: "stock-4",
-    input: "2 4 1",
+    input: "3\n2 4 1",
     expectedOutput: "2",
   },
   {
     id: "stock-5",
-    input: "3 3 3 3",
+    input: "4\n3 3 3 3",
     expectedOutput: "0",
   },
 ],
@@ -480,8 +497,11 @@ return false;
 }
 
 int main() {
-string s = "anagram";
-string t = "nagaram";
+string s;
+string t;
+
+getline(cin, s);
+getline(cin, t);
 
 cout << (isAnagram(s, t) ? "true" : "false");
 
@@ -503,27 +523,27 @@ examples: [
 testCases: [
   {
     id: "anagram-1",
-    input: "anagram | nagaram",
+    input: "anagram\nnagaram",
     expectedOutput: "true",
   },
   {
     id: "anagram-2",
-    input: "rat | car",
+    input: "rat\ncar",
     expectedOutput: "false",
   },
   {
     id: "anagram-3",
-    input: "listen | silent",
+    input: "listen\nsilent",
     expectedOutput: "true",
   },
   {
     id: "anagram-4",
-    input: "hello | world",
+    input: "hello\nworld",
     expectedOutput: "false",
   },
   {
     id: "anagram-5",
-    input: "aacc | ccac",
+    input: "aacc\nccac",
     expectedOutput: "false",
   },
 ],
@@ -585,7 +605,8 @@ return 0;
 }
 
 int main() {
-string s = "abcabcbb";
+string s;
+getline(cin, s);
 
 cout << lengthOfLongestSubstring(s);
 
@@ -689,8 +710,17 @@ return -1;
 }
 
 int main() {
-vector<int> nums = {4, 5, 6, 7, 0, 1, 2};
-int target = 0;
+int n;
+cin >> n;
+
+vector<int> nums(n);
+
+for (int i = 0; i < n; i++) {
+cin >> nums[i];
+}
+
+int target;
+cin >> target;
 
 cout << search(nums, target);
 
@@ -712,27 +742,27 @@ examples: [
 testCases: [
   {
     id: "rotated-1",
-    input: "4 5 6 7 0 1 2 | 0",
+    input: "7\n4 5 6 7 0 1 2\n0",
     expectedOutput: "4",
   },
   {
     id: "rotated-2",
-    input: "4 5 6 7 0 1 2 | 3",
+    input: "7\n4 5 6 7 0 1 2\n3",
     expectedOutput: "-1",
   },
   {
     id: "rotated-3",
-    input: "1 | 1",
+    input: "1\n1\n1",
     expectedOutput: "0",
   },
   {
     id: "rotated-4",
-    input: "3 1 | 1",
+    input: "2\n3 1\n1",
     expectedOutput: "1",
   },
   {
     id: "rotated-5",
-    input: "5 6 7 8 1 2 3 4 | 8",
+    input: "8\n5 6 7 8 1 2 3 4\n8",
     expectedOutput: "3",
   },
 ],
@@ -793,8 +823,17 @@ return 0;
 }
 
 int main() {
-vector<int> nums = {1, 1, 1};
-int k = 2;
+int n;
+cin >> n;
+
+vector<int> nums(n);
+
+for (int i = 0; i < n; i++) {
+cin >> nums[i];
+}
+
+int k;
+cin >> k;
 
 cout << subarraySum(nums, k);
 
@@ -816,27 +855,27 @@ examples: [
 testCases: [
   {
     id: "subarray-1",
-    input: "1 1 1 | 2",
+    input: "3\n1 1 1\n2",
     expectedOutput: "2",
   },
   {
     id: "subarray-2",
-    input: "1 2 3 | 3",
+    input: "3\n1 2 3\n3",
     expectedOutput: "2",
   },
   {
     id: "subarray-3",
-    input: "1 -1 0 | 0",
+    input: "3\n1 -1 0\n0",
     expectedOutput: "3",
   },
   {
     id: "subarray-4",
-    input: "1 | 1",
+    input: "1\n1\n1",
     expectedOutput: "1",
   },
   {
     id: "subarray-5",
-    input: "1 2 1 2 1 | 3",
+    input: "5\n1 2 1 2 1\n3",
     expectedOutput: "4",
   },
 ],
