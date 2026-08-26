@@ -85,10 +85,34 @@ export default function ProblemPage() {
       }
 
       try {
-        const saved =
-          localStorage.getItem("error-dna-history");
+        const saved = localStorage.getItem(
+          "error-dna-submissions",
+        );
 
-        return saved ? JSON.parse(saved) : [];
+        const history: SubmissionHistoryEntry[] =
+          saved ? JSON.parse(saved) : [];
+
+        return history.reduce<ErrorDNAEntry[]>(
+          (current, entry) => {
+            const existing = current.find(
+              (item) =>
+                item.fingerprintId === entry.fingerprintId,
+            );
+
+            if (existing) {
+              existing.count += 1;
+            } else {
+              current.push({
+                fingerprintId: entry.fingerprintId,
+                name: entry.fingerprintName,
+                count: 1,
+              });
+            }
+
+            return current;
+          },
+          [],
+        );
       } catch {
         return [];
       }
@@ -198,50 +222,41 @@ export default function ProblemPage() {
                 const history: SubmissionHistoryEntry[] =
                   savedHistory ? JSON.parse(savedHistory) : [];
 
+                const updatedHistory = [
+                  historyEntry,
+                  ...history,
+                ].slice(0, 100);
+
                 localStorage.setItem(
                   "error-dna-submissions",
-                  JSON.stringify(
-                    [historyEntry, ...history].slice(0, 100),
-                  ),
+                  JSON.stringify(updatedHistory),
                 );
+
+                const fingerprintCounts = updatedHistory.reduce<
+                  ErrorDNAEntry[]
+                >((current, entry) => {
+                  const existing = current.find(
+                    (item) =>
+                      item.fingerprintId === entry.fingerprintId,
+                  );
+
+                  if (existing) {
+                    existing.count += 1;
+                  } else {
+                    current.push({
+                      fingerprintId: entry.fingerprintId,
+                      name: entry.fingerprintName,
+                      count: 1,
+                    });
+                  }
+
+                  return current;
+                }, []);
+
+                setErrorDNA(fingerprintCounts);
               } catch {
                 // History storage should never block diagnosis.
               }
-
-              setErrorDNA((current) => {
-                const existing = current.find(
-                  (item) =>
-                    item.fingerprintId ===
-                    newDiagnosis.fingerprint.id,
-                );
-
-                const updated = existing
-                  ? current.map((item) =>
-                      item.fingerprintId ===
-                      newDiagnosis.fingerprint.id
-                        ? {
-                            ...item,
-                            count: item.count + 1,
-                          }
-                        : item,
-                    )
-                  : [
-                      ...current,
-                      {
-                        fingerprintId:
-                          newDiagnosis.fingerprint.id,
-                        name: newDiagnosis.fingerprint.name,
-                        count: 1,
-                      },
-                    ];
-
-                localStorage.setItem(
-                  "error-dna-history",
-                  JSON.stringify(updated),
-                );
-
-                return updated;
-              });
             }
           }
         }

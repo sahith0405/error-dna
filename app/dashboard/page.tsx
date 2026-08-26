@@ -22,19 +22,6 @@ type SubmissionHistoryEntry = {
 
 
 export default function DashboardPage() {
-  const [errorDNA] = useState<ErrorDNAEntry[]>(() => {
-    if (typeof window === "undefined") {
-      return [];
-    }
-
-    try {
-      const saved = localStorage.getItem("error-dna-history");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
   const [submissions] = useState<SubmissionHistoryEntry[]>(() => {
     if (typeof window === "undefined") {
       return [];
@@ -47,6 +34,28 @@ export default function DashboardPage() {
       return [];
     }
   });
+
+  const errorDNA = submissions.reduce<ErrorDNAEntry[]>(
+    (current, submission) => {
+      const existing = current.find(
+        (item) =>
+          item.fingerprintId === submission.fingerprintId,
+      );
+
+      if (existing) {
+        existing.count += 1;
+      } else {
+        current.push({
+          fingerprintId: submission.fingerprintId,
+          name: submission.fingerprintName,
+          count: 1,
+        });
+      }
+
+      return current;
+    },
+    [],
+  );
 
   const totalErrors = errorDNA.reduce(
     (total, item) => total + item.count,
