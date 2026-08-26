@@ -27,6 +27,18 @@ type ErrorDNAEntry = {
   count: number;
 };
 
+type SubmissionHistoryEntry = {
+  id: string;
+  problemId: string;
+  problemTitle: string;
+  status: string;
+  fingerprintId: string;
+  fingerprintName: string;
+  timestamp: string;
+  passedTests?: number;
+  totalTests?: number;
+};
+
 type JudgeResult = {
   success: boolean;
   status: string;
@@ -166,6 +178,36 @@ export default function ProblemPage() {
             setDiagnosis(newDiagnosis);
 
             if (newDiagnosis.fingerprint) {
+              try {
+                const historyEntry: SubmissionHistoryEntry = {
+                  id: crypto.randomUUID(),
+                  problemId: problem.id,
+                  problemTitle: problem.title,
+                  status: result.status,
+                  fingerprintId: newDiagnosis.fingerprint.id,
+                  fingerprintName: newDiagnosis.fingerprint.name,
+                  timestamp: new Date().toISOString(),
+                  passedTests: result.passedTests,
+                  totalTests: result.totalTests,
+                };
+
+                const savedHistory = localStorage.getItem(
+                  "error-dna-submissions",
+                );
+
+                const history: SubmissionHistoryEntry[] =
+                  savedHistory ? JSON.parse(savedHistory) : [];
+
+                localStorage.setItem(
+                  "error-dna-submissions",
+                  JSON.stringify(
+                    [historyEntry, ...history].slice(0, 100),
+                  ),
+                );
+              } catch {
+                // History storage should never block diagnosis.
+              }
+
               setErrorDNA((current) => {
                 const existing = current.find(
                   (item) =>
@@ -241,6 +283,13 @@ export default function ProblemPage() {
               className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             >
               Problems
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            >
+              Your Progress
             </Link>
 
             <span className="text-[var(--text-muted)]">

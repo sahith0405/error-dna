@@ -52,7 +52,7 @@ export default function Home() {
             </Link>
 
             <Link
-              href="#progress"
+              href="/dashboard"
               className="text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
             >
               Your Progress
