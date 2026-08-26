@@ -14,6 +14,12 @@ type AnalyzeRequest = {
   }[];
 };
 
+type ErrorFingerprint = {
+  id: string;
+  name: string;
+  description: string;
+};
+
 type Diagnosis = {
   category: string;
   title: string;
@@ -21,6 +27,7 @@ type Diagnosis = {
   explanation: string;
   signals: string[];
   recommendation: string;
+  fingerprint: ErrorFingerprint;
 };
 
 function analyzeSubmission(body: AnalyzeRequest): Diagnosis {
@@ -50,6 +57,12 @@ function analyzeSubmission(body: AnalyzeRequest): Diagnosis {
         signals: ["Compiler rejected the source code"],
         recommendation:
           "Read the first compiler error carefully and fix that error before addressing later messages.",
+        fingerprint: {
+          id: "syntax-compilation",
+          name: "Syntax / Compilation",
+          description:
+            "The source code cannot be compiled because of a syntax, declaration, type, or structural issue.",
+        },
       };
     }
 
@@ -62,6 +75,12 @@ function analyzeSubmission(body: AnalyzeRequest): Diagnosis {
       signals: ["Compilation failed"],
       recommendation:
         "Start with the first compiler diagnostic and verify declarations, types, headers, and syntax.",
+      fingerprint: {
+        id: "compilation-error",
+        name: "Compilation Error",
+        description:
+          "The compiler cannot produce an executable program from the submitted source.",
+      },
     };
   }
 
@@ -85,6 +104,12 @@ function analyzeSubmission(body: AnalyzeRequest): Diagnosis {
         signals,
         recommendation:
           "Check array bounds, pointers, references, and container access before using them.",
+        fingerprint: {
+          id: "invalid-memory-access",
+          name: "Invalid Memory Access",
+          description:
+            "The program may access memory outside a valid array, container, pointer, or reference boundary.",
+        },
       };
     }
 
@@ -97,6 +122,12 @@ function analyzeSubmission(body: AnalyzeRequest): Diagnosis {
       signals,
       recommendation:
         "Check division by zero, invalid indexing, null pointers, recursion depth, and other runtime assumptions.",
+      fingerprint: {
+        id: "runtime-crash",
+        name: "Runtime Crash",
+        description:
+          "The program compiles but terminates unexpectedly while executing.",
+      },
     };
   }
 
@@ -110,6 +141,12 @@ function analyzeSubmission(body: AnalyzeRequest): Diagnosis {
       signals: ["Execution exceeded the time limit"],
       recommendation:
         "Look for unnecessary nested loops, repeated computation, or data structures that can be replaced with faster alternatives.",
+      fingerprint: {
+        id: "time-complexity",
+        name: "Time Complexity",
+        description:
+          "The solution performs too much work to finish within the execution limit.",
+      },
     };
   }
 
@@ -155,6 +192,12 @@ function analyzeSubmission(body: AnalyzeRequest): Diagnosis {
         ],
         recommendation:
           "Implement the core algorithm before optimizing or handling advanced edge cases.",
+        fingerprint: {
+          id: "incomplete-logic",
+          name: "Incomplete Logic",
+          description:
+            "The submission appears to contain placeholder logic instead of a complete solution.",
+        },
       };
     }
 
@@ -174,6 +217,12 @@ function analyzeSubmission(body: AnalyzeRequest): Diagnosis {
         signals,
         recommendation:
           "Identify the smallest failing input and trace the values through the relevant calculation.",
+        fingerprint: {
+          id: "edge-case-handling",
+          name: "Edge Case Handling",
+          description:
+            "The general approach may work, but an input boundary or unusual case is not handled correctly.",
+        },
       };
     }
 
@@ -186,6 +235,12 @@ function analyzeSubmission(body: AnalyzeRequest): Diagnosis {
       signals,
       recommendation:
         "Compare the first failing test case with your algorithm step by step. Focus on the exact point where your expected state differs from the actual state.",
+      fingerprint: {
+        id: "logic-error",
+        name: "Logic Error",
+        description:
+          "The implementation produces an incorrect result because its algorithmic reasoning differs from the required behavior.",
+      },
     };
   }
 
@@ -199,6 +254,12 @@ function analyzeSubmission(body: AnalyzeRequest): Diagnosis {
       signals: ["All test cases passed"],
       recommendation:
         "Continue practicing and watch for recurring patterns across future submissions.",
+      fingerprint: {
+        id: "no-error",
+        name: "No Detected Error",
+        description:
+          "The submission passed all available test cases.",
+      },
     };
   }
 
@@ -211,6 +272,12 @@ function analyzeSubmission(body: AnalyzeRequest): Diagnosis {
     signals: [`Judge status: ${status}`],
     recommendation:
       "Run the submission again and inspect the judge result.",
+    fingerprint: {
+      id: "unknown",
+      name: "Unknown",
+      description:
+        "There is not enough information to identify a specific error pattern.",
+    },
   };
 }
 

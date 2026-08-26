@@ -14,6 +14,11 @@ type Diagnosis = {
   explanation: string;
   signals: string[];
   recommendation: string;
+  fingerprint: {
+    id: string;
+    name: string;
+    description: string;
+  };
 };
 
 type JudgeResult = {
@@ -401,6 +406,20 @@ export default function ProblemPage() {
                       <span className="rounded-md bg-[var(--warning-bg)] px-2.5 py-1 text-xs font-semibold text-[var(--warning)]">
                         {diagnosis.category}
                       </span>
+                    </div>
+
+                    <div className="mt-4 rounded-md border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                        Error Fingerprint
+                      </p>
+
+                      <p className="mt-2 text-sm font-semibold text-[var(--text-primary)]">
+                        {diagnosis.fingerprint.name}
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">
+                        {diagnosis.fingerprint.description}
+                      </p>
                     </div>
 
                     <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">
