@@ -21,6 +21,12 @@ type Diagnosis = {
   };
 };
 
+type ErrorDNAEntry = {
+  fingerprintId: string;
+  name: string;
+  count: number;
+};
+
 type JudgeResult = {
   success: boolean;
   status: string;
@@ -59,6 +65,22 @@ export default function ProblemPage() {
 
   const [diagnosis, setDiagnosis] =
     useState<Diagnosis | null>(null);
+
+  const [errorDNA, setErrorDNA] =
+    useState<ErrorDNAEntry[]>(() => {
+      if (typeof window === "undefined") {
+        return [];
+      }
+
+      try {
+        const saved =
+          localStorage.getItem("error-dna-history");
+
+        return saved ? JSON.parse(saved) : [];
+      } catch {
+        return [];
+      }
+    });
 
   if (!problem) {
     return (
@@ -138,7 +160,47 @@ export default function ProblemPage() {
           const analysis = await analysisResponse.json();
 
           if (analysis.success && analysis.diagnosis) {
-            setDiagnosis(analysis.diagnosis);
+            const newDiagnosis =
+              analysis.diagnosis as Diagnosis;
+
+            setDiagnosis(newDiagnosis);
+
+            if (newDiagnosis.fingerprint) {
+              setErrorDNA((current) => {
+                const existing = current.find(
+                  (item) =>
+                    item.fingerprintId ===
+                    newDiagnosis.fingerprint.id,
+                );
+
+                const updated = existing
+                  ? current.map((item) =>
+                      item.fingerprintId ===
+                      newDiagnosis.fingerprint.id
+                        ? {
+                            ...item,
+                            count: item.count + 1,
+                          }
+                        : item,
+                    )
+                  : [
+                      ...current,
+                      {
+                        fingerprintId:
+                          newDiagnosis.fingerprint.id,
+                        name: newDiagnosis.fingerprint.name,
+                        count: 1,
+                      },
+                    ];
+
+                localStorage.setItem(
+                  "error-dna-history",
+                  JSON.stringify(updated),
+                );
+
+                return updated;
+              });
+            }
           }
         }
       } catch {
@@ -450,6 +512,54 @@ export default function ProblemPage() {
 
                       <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
                         {diagnosis.recommendation}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {errorDNA.length > 0 && (
+                  <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)]">
+                      Your Error DNA
+                    </p>
+
+                    <h3 className="mt-2 text-base font-semibold">
+                      Recurring patterns
+                    </h3>
+
+                    <div className="mt-4 space-y-2">
+                      {[...errorDNA]
+                        .sort((a, b) => b.count - a.count)
+                        .map((entry) => (
+                          <div
+                            key={entry.fingerprintId}
+                            className="flex items-center justify-between rounded-md bg-[var(--surface-subtle)] px-3 py-2.5"
+                          >
+                            <span className="text-sm text-[var(--text-secondary)]">
+                              {entry.name}
+                            </span>
+
+                            <span className="rounded-full bg-[var(--surface)] px-2 py-1 text-xs font-semibold text-[var(--text-muted)]">
+                              {entry.count}{" "}
+                              {entry.count === 1
+                                ? "time"
+                                : "times"}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-4 border-t border-[var(--border)] pt-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                        Most common
+                      </p>
+
+                      <p className="mt-2 text-sm font-semibold">
+                        {
+                          [...errorDNA].sort(
+                            (a, b) => b.count - a.count,
+                          )[0].name
+                        }
                       </p>
                     </div>
                   </div>
