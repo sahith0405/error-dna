@@ -2,6 +2,8 @@
 
 > Don't just fix the code. Understand the mistake.
 
+**Live demo:** [error-dna.vercel.app](https://error-dna.vercel.app/)
+
 ERROR DNA is a coding practice platform for students who need more than a binary judge result. A normal `Wrong Answer` tells a student that the output is incorrect, but not what reasoning pattern may have caused the mistake. ERROR DNA runs C++ submissions against multiple test cases, examines the execution evidence, and turns the result into an understandable diagnosis that students can use to improve.
 
 ## Why It Matters
@@ -118,6 +120,32 @@ The screenshots below show the implemented problem-solving and progress flows.
 ![Dashboard](screenshots/dashboard.png)
 
 ![Submission history](screenshots/history.png)
+
+## Repository Structure
+
+```text
+error-dna/
+├── app/
+│   ├── api/
+│   │   ├── analyze/route.ts      # Deterministic diagnosis endpoint
+│   │   └── execute/route.ts      # C++17 compile, run, and judge endpoint
+│   ├── dashboard/page.tsx        # Error profile, trends, and history
+│   ├── problems/[id]/page.tsx    # Problem workspace and submission flow
+│   ├── page.tsx                  # Problem library and filters
+│   ├── globals.css               # Application theme and styles
+│   └── layout.tsx                # Root layout and metadata
+├── components/
+│   ├── coding-workspace/CodeEditor.tsx
+│   └── problem-bank/ProblemCard.tsx
+├── data/problems.ts              # Problem definitions and test cases
+├── public/                       # Static assets
+├── screenshots/                  # README screenshots
+├── package.json
+├── next.config.ts
+├── postcss.config.mjs
+├── eslint.config.mjs
+└── README.md
+```
 
 ## Tech Stack
 
