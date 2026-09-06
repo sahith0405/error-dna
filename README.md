@@ -51,7 +51,7 @@ The following solutions are the intended correct C++17 solutions for the 8 probl
 
 ### How to verify
 
-1. Open the corresponding problem on the [deployed application](https://error-dna-15-eu0r49bie-sahith6.vercel.app/).
+1. Open the corresponding problem on the [deployed application](https://error-dna-15.vercel.app/).
 2. Copy the complete solution into the editor.
 3. Run or submit it.
 4. The expected result is `ACCEPTED`.
